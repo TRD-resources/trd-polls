@@ -110,7 +110,7 @@
       left: 0;
       right: 0;
       height: 0%;
-      background: rgba(58, 122, 191, 0.45);
+      background: rgba(30, 80, 140, 0.65);
       transition: height 0.6s ease;
       border-radius: 0 0 20px 20px;
     }
@@ -138,11 +138,9 @@
       color: #1a3a52;
     }
 
-    /* Leading option gets a blue outline */
+    /* Leading option — no outline */
     .card-wrap.leader .card {
-      outline: 5px solid #3a7abf;
-      outline-offset: -5px;
-      box-shadow: 0 8px 32px rgba(58,122,191,0.35);
+      box-shadow: 0 6px 24px rgba(0,0,0,0.15);
     }
   </style>
 </head>
@@ -241,10 +239,24 @@
       var maxVotes = 0;
       var maxIdx   = -1;
 
+      // Collect votes for ranking
+      var voteCounts = OPTIONS.map(function(opt, i) {
+        return { idx: i, votes: record[opt.name] || 0 };
+      });
+
+      // Sort descending to determine medal ranks
+      var medals = ['🥇', '🥈', '🥉'];
+      var sorted = voteCounts.slice().sort(function(a, b) { return b.votes - a.votes; });
+      var rankMap = {};
+      sorted.forEach(function(item, rank) {
+        if (item.votes > 0 && rank < 3) rankMap[item.idx] = medals[rank];
+      });
+
       OPTIONS.forEach(function(opt, i) {
         var votes = record[opt.name] || 0;
         var pct   = total > 0 ? Math.round(votes / total * 100) : 0;
-        document.getElementById('pct-' + i).textContent = pct + '%';
+        var medal = rankMap[i] ? rankMap[i] + ' ' : '';
+        document.getElementById('pct-' + i).textContent = medal + pct + '%';
         document.getElementById('bar-' + i).style.height = pct + '%';
         if (votes > maxVotes) { maxVotes = votes; maxIdx = i; }
       });
