@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TRD Poll — Vote</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(160deg, #a8c4d8 0%, #bccfdf 40%, #cdd9e5 100%);
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 56px 80px 48px;
+      gap: 48px;
+    }
+
+    .question {
+      font-size: 3.2rem;
+      font-weight: 600;
+      color: #1a3a52;
+      text-align: center;
+    }
+
+    /* ---- Horizontal cards row ---- */
+    .cards-row {
+      display: flex;
+      gap: 32px;
+      width: 100%;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .card {
+      flex: 1;
+      border-radius: 20px;
+      overflow: hidden;
+      position: relative;
+      background: #6a8fa8;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.15);
+    }
+
+    .card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .card .option-label {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(transparent, rgba(0,0,0,0.65));
+      color: white;
+      font-size: 2rem;
+      font-weight: 700;
+      padding: 48px 20px 20px;
+      text-align: center;
+      letter-spacing: 0.02em;
+    }
+
+    /* ---- QR section at bottom ---- */
+    .qr-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .qr-section img {
+      width: 140px;
+      height: 140px;
+      display: block;
+    }
+
+    .scan-text {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #1a3a52;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ================================================================
+     CONFIG — update these values when switching to a new poll
+     ================================================================ -->
+<script>
+  var POLL_TITLE = "Where would you go for summer vacation?";
+  var OPTIONS = [
+    { name: "Hawaii",       image: "hawaii.jpg" },
+    { name: "Europe",       image: "europe.jpg" },
+    { name: "Disney World", image: "disney-world.jpg" },
+    { name: "Yosemite",     image: "yosemite.jpg" }
+  ];
+</script>
+<!-- ================================================================ -->
+
+<div class="question" id="pollTitle"></div>
+
+<div class="cards-row" id="cardsRow"></div>
+
+<div class="qr-section">
+  <img id="qrImg" src="qr-code.png" alt="QR Code" />
+  <div class="scan-text">Scan to Vote Now!</div>
+</div>
+
+<script>
+  document.getElementById('pollTitle').textContent = POLL_TITLE;
+
+  var cardsRow = document.getElementById('cardsRow');
+  OPTIONS.forEach(function(opt) {
+    var card = document.createElement('div');
+    card.className = 'card';
+
+    var img = document.createElement('img');
+    img.src = opt.image;
+    img.alt = opt.name;
+
+    var label = document.createElement('div');
+    label.className = 'option-label';
+    label.textContent = opt.name;
+
+    card.appendChild(img);
+    card.appendChild(label);
+    cardsRow.appendChild(card);
+  });
+</script>
+</body>
+</html>
