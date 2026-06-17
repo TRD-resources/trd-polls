@@ -244,12 +244,15 @@
         return { idx: i, votes: record[opt.name] || 0 };
       });
 
-      // Sort descending to determine medal ranks
+      // Sort descending to determine medal ranks — ties share the same medal
       var medals = ['🥇', '🥈', '🥉'];
       var sorted = voteCounts.slice().sort(function(a, b) { return b.votes - a.votes; });
       var rankMap = {};
-      sorted.forEach(function(item, rank) {
-        if (item.votes > 0 && rank < 3) rankMap[item.idx] = medals[rank];
+      var actualRank = 0;
+      sorted.forEach(function(item, i) {
+        if (item.votes === 0) return;
+        if (i > 0 && item.votes < sorted[i - 1].votes) actualRank = i;
+        if (actualRank < 3) rankMap[item.idx] = medals[actualRank];
       });
 
       OPTIONS.forEach(function(opt, i) {
