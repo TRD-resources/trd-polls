@@ -103,6 +103,18 @@
       display: block;
     }
 
+    /* Translucent bar fill from bottom */
+    .card .bar-fill {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 0%;
+      background: rgba(58, 122, 191, 0.45);
+      transition: height 0.6s ease;
+      border-radius: 0 0 20px 20px;
+    }
+
     /* Name overlay at bottom of card */
     .card .option-label {
       position: absolute;
@@ -116,6 +128,7 @@
       padding: 48px 20px 18px;
       text-align: center;
       letter-spacing: 0.02em;
+      z-index: 1;
     }
 
     /* Percentage below card */
@@ -189,11 +202,16 @@
     img.src = opt.image;
     img.alt = opt.name;
 
+    var bar = document.createElement('div');
+    bar.className = 'bar-fill';
+    bar.id = 'bar-' + i;
+
     var label = document.createElement('div');
     label.className = 'option-label';
     label.textContent = opt.name;
 
     card.appendChild(img);
+    card.appendChild(bar);
     card.appendChild(label);
 
     var pctEl = document.createElement('div');
@@ -227,6 +245,7 @@
         var votes = record[opt.name] || 0;
         var pct   = total > 0 ? Math.round(votes / total * 100) : 0;
         document.getElementById('pct-' + i).textContent = pct + '%';
+        document.getElementById('bar-' + i).style.height = pct + '%';
         if (votes > maxVotes) { maxVotes = votes; maxIdx = i; }
       });
 
