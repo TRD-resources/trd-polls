@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TRD Poll</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(160deg, #a8c4d8 0%, #bccfdf 40%, #cdd9e5 100%);
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      display: flex;
+    }
+
+    /* ---- Left sidebar — sized for 2560x1440 ---- */
+    .sidebar {
+      width: 380px;
+      min-width: 380px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 28px;
+      padding: 60px 36px;
+    }
+
+    .sidebar .join-text {
+      font-size: 1.6rem;
+      color: #1e4060;
+      text-align: center;
+      font-weight: 500;
+      line-height: 1.5;
+    }
+
+    .sidebar .qr-wrap {
+      background: white;
+      border-radius: 20px;
+      padding: 14px;
+    }
+
+    .sidebar .qr-wrap img {
+      display: block;
+      width: 260px;
+      height: 260px;
+    }
+
+    .sidebar .form-url { display: none; }
+
+    /* ---- Right content ---- */
+    .content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 56px 72px 56px 48px;
+      position: relative;
+    }
+
+    .response-count { display: none; }
+
+    .question {
+      font-size: 3.2rem;
+      font-weight: 600;
+      color: #1a3a52;
+      margin-top: 20px;
+      margin-bottom: 48px;
+    }
+
+    /* ---- Cards ---- */
+    .cards-row {
+      display: flex;
+      gap: 32px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .card-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 22px;
+    }
+
+    .card {
+      width: 100%;
+      flex: 1;
+      border-radius: 20px;
+      overflow: hidden;
+      position: relative;
+      background: #6a8fa8;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.15);
+      transition: box-shadow 0.3s ease;
+    }
+
+    .card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* Name overlay at bottom of card */
+    .card .option-label {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(transparent, rgba(0,0,0,0.62));
+      color: white;
+      font-size: 1.9rem;
+      font-weight: 700;
+      padding: 48px 20px 18px;
+      text-align: center;
+      letter-spacing: 0.02em;
+    }
+
+    /* Percentage below card */
+    .pct-text {
+      font-size: 2.6rem;
+      font-weight: 600;
+      color: #1a3a52;
+    }
+
+    /* Leading option gets a blue outline */
+    .card-wrap.leader .card {
+      outline: 5px solid #3a7abf;
+      outline-offset: -5px;
+      box-shadow: 0 8px 32px rgba(58,122,191,0.35);
+    }
+  </style>
+</head>
+<body>
+
+<!-- ================================================================
+     CONFIG — update these values when switching to a new poll
+     ================================================================ -->
+<script>
+  var POLL_TITLE  = "Where would you go for summer vacation?";
+  var FORM_URL    = "https://forms.cloud.microsoft/r/Wsw29jpi9t";
+  var JSONBIN_ID  = "6a32fd04f5f4af5e290434d8";
+  var JSONBIN_KEY = "$2a$10$/PB0K4kt3Il680V0G3yE2ebsxGNyR74h/Z1zHbHXj/tZ38wR5ZK0u";
+  var REFRESH_MS  = 30000;
+
+  // Update names and images for each new poll
+  var OPTIONS = [
+    { name: "Hawaii",       image: "hawaii.jpg" },
+    { name: "Europe",       image: "europe.jpg" },
+    { name: "Disney World", image: "disney-world.jpg" },
+    { name: "Yosemite",     image: "yosemite.jpg" }
+  ];
+</script>
+<!-- ================================================================ -->
+
+<div class="sidebar">
+  <div class="join-text">Scan the QR or use link<br>to join</div>
+  <div class="qr-wrap">
+    <img id="qrImg" src="" alt="QR Code" />
+  </div>
+  <div class="form-url" id="formUrlText"></div>
+</div>
+
+<div class="content">
+  <div class="response-count" id="responseCount">0 responses submitted</div>
+  <div class="question" id="pollTitle"></div>
+  <div class="cards-row" id="cardsRow"></div>
+</div>
+
+<script>
+  // Populate static content
+  document.getElementById('pollTitle').textContent   = POLL_TITLE;
+  document.getElementById('formUrlText').textContent = FORM_URL;
+  document.getElementById('qrImg').src = 'qr-code.png';
+
+  // Build image cards
+  var cardsRow = document.getElementById('cardsRow');
+  OPTIONS.forEach(function(opt, i) {
+    var wrap = document.createElement('div');
+    wrap.className = 'card-wrap';
+    wrap.id = 'wrap-' + i;
+
+    var card = document.createElement('div');
+    card.className = 'card';
+
+    var img = document.createElement('img');
+    img.src = opt.image;
+    img.alt = opt.name;
+
+    var label = document.createElement('div');
+    label.className = 'option-label';
+    label.textContent = opt.name;
+
+    card.appendChild(img);
+    card.appendChild(label);
+
+    var pctEl = document.createElement('div');
+    pctEl.className = 'pct-text';
+    pctEl.id = 'pct-' + i;
+    pctEl.textContent = '0%';
+
+    wrap.appendChild(card);
+    wrap.appendChild(pctEl);
+    cardsRow.appendChild(wrap);
+  });
+
+  // Fetch live data from JSONBin and update display
+  async function refresh() {
+    try {
+      var res = await fetch(
+        'https://api.jsonbin.io/v3/b/' + JSONBIN_ID + '/latest',
+        { headers: { 'X-Master-Key': JSONBIN_KEY } }
+      );
+      var json = await res.json();
+      var record = json.record;
+
+      var total = OPTIONS.reduce(function(sum, opt) {
+        return sum + (record[opt.name] || 0);
+      }, 0);
+
+      var maxVotes = 0;
+      var maxIdx   = -1;
+
+      OPTIONS.forEach(function(opt, i) {
+        var votes = record[opt.name] || 0;
+        var pct   = total > 0 ? Math.round(votes / total * 100) : 0;
+        document.getElementById('pct-' + i).textContent = pct + '%';
+        if (votes > maxVotes) { maxVotes = votes; maxIdx = i; }
+      });
+
+      // Highlight leading option
+      OPTIONS.forEach(function(_, i) {
+        var wrap = document.getElementById('wrap-' + i);
+        if (maxVotes > 0 && i === maxIdx) {
+          wrap.classList.add('leader');
+        } else {
+          wrap.classList.remove('leader');
+        }
+      });
+
+      document.getElementById('responseCount').textContent =
+        total + ' response' + (total !== 1 ? 's' : '') + ' submitted';
+
+    } catch (e) {
+      console.error('Refresh error:', e);
+    }
+  }
+
+  refresh();
+  setInterval(refresh, REFRESH_MS);
+</script>
+</body>
+</html>
