@@ -16,7 +16,7 @@
       display: flex;
     }
 
-    /* ---- Left sidebar — sized for 2560x1440 ---- */
+    /* ---- Left sidebar ---- */
     .sidebar {
       width: 380px;
       min-width: 380px;
@@ -36,12 +36,6 @@
       line-height: 1.5;
     }
 
-    .sidebar .qr-wrap {
-      background: white;
-      border-radius: 20px;
-      padding: 14px;
-    }
-
     .sidebar .qr-wrap img {
       display: block;
       width: 260px;
@@ -55,8 +49,7 @@
       flex: 1;
       display: flex;
       flex-direction: column;
-      padding: 56px 72px 56px 48px;
-      position: relative;
+      padding: 48px 72px 48px 48px;
     }
 
     .response-count { display: none; }
@@ -66,7 +59,7 @@
       font-weight: 600;
       color: #1a3a52;
       margin-top: 20px;
-      margin-bottom: 48px;
+      margin-bottom: 36px;
       text-align: center;
     }
 
@@ -83,7 +76,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 22px;
+      gap: 14px;
     }
 
     .card {
@@ -94,7 +87,6 @@
       position: relative;
       background: #6a8fa8;
       box-shadow: 0 6px 24px rgba(0,0,0,0.15);
-      transition: box-shadow 0.3s ease;
     }
 
     .card img {
@@ -102,19 +94,7 @@
       height: 100%;
       object-fit: cover;
       display: block;
-      opacity: 0.75;
-    }
-
-    /* Translucent bar fill from bottom */
-    .card .bar-fill {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 0%;
-      background: rgba(20, 60, 110, 0.85);
-      transition: height 0.6s ease;
-      border-radius: 0 0 20px 20px;
+      opacity: 1;
     }
 
     /* Name overlay at bottom of card */
@@ -130,19 +110,30 @@
       padding: 48px 20px 18px;
       text-align: center;
       letter-spacing: 0.02em;
-      z-index: 1;
     }
 
-    /* Percentage below card */
+    /* Horizontal bar track below card */
+    .bar-track {
+      width: 100%;
+      height: 18px;
+      background: rgba(255,255,255,0.35);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .bar-track .bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #4a90d9, #6a5acd);
+      border-radius: 10px;
+      transition: width 0.6s ease;
+    }
+
+    /* Percentage below bar */
     .pct-text {
       font-size: 2.6rem;
       font-weight: 600;
       color: #1a3a52;
-    }
-
-    /* Leading option — no outline */
-    .card-wrap.leader .card {
-      box-shadow: 0 6px 24px rgba(0,0,0,0.15);
     }
   </style>
 </head>
@@ -152,13 +143,12 @@
      CONFIG — update these values when switching to a new poll
      ================================================================ -->
 <script>
-  var POLL_TITLE  = "Where would you go for summer vacation?";
+  var POLL_TITLE  = "TRD: Where Would You Go For Summer Vacation?";
   var FORM_URL    = "https://forms.cloud.microsoft/r/Wsw29jpi9t";
   var JSONBIN_ID  = "6a32fd04f5f4af5e290434d8";
   var JSONBIN_KEY = "$2a$10$/PB0K4kt3Il680V0G3yE2ebsxGNyR74h/Z1zHbHXj/tZ38wR5ZK0u";
   var REFRESH_MS  = 30000;
 
-  // Update names and images for each new poll
   var OPTIONS = [
     { name: "Hawaii",       image: "hawaii.jpg" },
     { name: "Europe",       image: "europe.jpg" },
@@ -170,7 +160,7 @@
 
 <div class="sidebar">
   <div class="join-text">Scan to Vote Now!</div>
-  <div class="qr-wrap" style="background:none; padding:0;">
+  <div class="qr-wrap">
     <img id="qrImg" src="" alt="QR Code" />
   </div>
   <div class="form-url" id="formUrlText"></div>
@@ -183,18 +173,17 @@
 </div>
 
 <script>
-  // Populate static content
   document.getElementById('pollTitle').textContent   = POLL_TITLE;
   document.getElementById('formUrlText').textContent = FORM_URL;
   document.getElementById('qrImg').src = 'qr-code-plain.png';
 
-  // Build image cards
   var cardsRow = document.getElementById('cardsRow');
   OPTIONS.forEach(function(opt, i) {
     var wrap = document.createElement('div');
     wrap.className = 'card-wrap';
     wrap.id = 'wrap-' + i;
 
+    // Photo card
     var card = document.createElement('div');
     card.className = 'card';
 
@@ -202,29 +191,34 @@
     img.src = opt.image;
     img.alt = opt.name;
 
-    var bar = document.createElement('div');
-    bar.className = 'bar-fill';
-    bar.id = 'bar-' + i;
-
     var label = document.createElement('div');
     label.className = 'option-label';
     label.textContent = opt.name;
 
     card.appendChild(img);
-    card.appendChild(bar);
     card.appendChild(label);
 
+    // Horizontal bar
+    var track = document.createElement('div');
+    track.className = 'bar-track';
+
+    var fill = document.createElement('div');
+    fill.className = 'bar-fill';
+    fill.id = 'bar-' + i;
+    track.appendChild(fill);
+
+    // Percentage + medal
     var pctEl = document.createElement('div');
     pctEl.className = 'pct-text';
     pctEl.id = 'pct-' + i;
     pctEl.textContent = '0%';
 
     wrap.appendChild(card);
+    wrap.appendChild(track);
     wrap.appendChild(pctEl);
     cardsRow.appendChild(wrap);
   });
 
-  // Fetch live data from JSONBin and update display
   async function refresh() {
     try {
       var res = await fetch(
@@ -241,12 +235,10 @@
       var maxVotes = 0;
       var maxIdx   = -1;
 
-      // Collect votes for ranking
       var voteCounts = OPTIONS.map(function(opt, i) {
         return { idx: i, votes: record[opt.name] || 0 };
       });
 
-      // Sort descending to determine medal ranks — ties share the same medal
       var medals = ['🥇', '🥈', '🥉'];
       var sorted = voteCounts.slice().sort(function(a, b) { return b.votes - a.votes; });
       var rankMap = {};
@@ -262,18 +254,8 @@
         var pct   = total > 0 ? Math.round(votes / total * 100) : 0;
         var medal = rankMap[i] ? rankMap[i] + ' ' : '';
         document.getElementById('pct-' + i).textContent = medal + pct + '%';
-        document.getElementById('bar-' + i).style.height = pct + '%';
+        document.getElementById('bar-' + i).style.width = pct + '%';
         if (votes > maxVotes) { maxVotes = votes; maxIdx = i; }
-      });
-
-      // Highlight leading option
-      OPTIONS.forEach(function(_, i) {
-        var wrap = document.getElementById('wrap-' + i);
-        if (maxVotes > 0 && i === maxIdx) {
-          wrap.classList.add('leader');
-        } else {
-          wrap.classList.remove('leader');
-        }
       });
 
       document.getElementById('responseCount').textContent =
