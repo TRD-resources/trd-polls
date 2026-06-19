@@ -145,8 +145,7 @@
 <script>
   var POLL_TITLE  = "TRD: Where Would You Go For Summer Vacation?";
   var FORM_URL    = "https://forms.cloud.microsoft/r/Wsw29jpi9t";
-  var JSONBIN_ID  = "6a32fd04f5f4af5e290434d8";
-  var JSONBIN_KEY = "$2a$10$/PB0K4kt3Il680V0G3yE2ebsxGNyR74h/Z1zHbHXj/tZ38wR5ZK0u";
+  var GIST_URL    = "https://gist.githubusercontent.com/rinawata/355051417028bccac5ddf3ec26149090/raw/votes.json";
   var REFRESH_MS  = 30000;
 
   var OPTIONS = [
@@ -221,12 +220,8 @@
 
   async function refresh() {
     try {
-      var res = await fetch(
-        'https://api.jsonbin.io/v3/b/' + JSONBIN_ID + '/latest',
-        { headers: { 'X-Master-Key': JSONBIN_KEY } }
-      );
-      var json = await res.json();
-      var record = json.record;
+      var res = await fetch(GIST_URL + '?t=' + Date.now());
+      var record = await res.json();
 
       var total = OPTIONS.reduce(function(sum, opt) {
         return sum + (record[opt.name] || 0);
